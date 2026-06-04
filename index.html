@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票持仓大师 - Material Design</title>
+    <style>
+        :root {
+            --google-blue: #1a73e8;
+            --google-red: #ea4335;
+            --google-green: #34a853;
+            --google-gray-bg: #f8f9fa;
+            --text-main: #202124;
+            --text-sub: #5f6368;
+            --border-color: #dadce0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--google-gray-bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 32px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 28px;
+            color: var(--text-main);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: .25px;
+            color: var(--text-sub);
+            margin: 24px 0 16px 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-sub);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            outline: none;
+            color: var(--text-main);
+            transition: border-color 0.15s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-main);
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .radio-label input[type="radio"] {
+            accent-color: var(--google-blue);
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        button {
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 24px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .btn-primary {
+            background-color: var(--google-blue);
+            color: #ffffff;
+            flex: 3;
+        }
+
+        .btn-primary:hover {
+            background-color: #1557b0;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--google-blue);
+            border: 1px solid var(--border-color);
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(26,115,232,0.04);
+        }
+
+        #profitBanner {
+            display: none;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            background-color: var(--google-gray-bg);
+            border-radius: 6px;
+            padding: 16px;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .val {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .val-large {
+            font-size: 18px;
+        }
+
+        .text-up { color: var(--google-red) !important; }
+        .text-down { color: var(--google-green) !important; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📈 股票持仓大师</h2>
+    
+    <div class="section-title" style="color: var(--google-blue);">1. 现有持仓与行情</div>
+    <div class="grid-2">
+        <div class="input-group">
+            <label>当前持仓均价 (元)</label>
+            <input type="number" id="cPrice" placeholder="0.00" step="0.001" oninput="calcCurrentProfit()">
+        </div>
+        <div class="input-group">
+            <label>当前持仓股数 (股)</label>
+            <input type="number" id="cCount" placeholder="0" step="1" oninput="calcCurrentProfit()">
+        </div>
+    </div>
+    <div class="input-group">
+        <label>最新市场价 (元) <span style="color:#80868b; font-weight:normal;">(选填)</span></label>
+        <input type="number" id="mPrice" placeholder="0.00" step="0.001" oninput="calcCurrentProfit()">
+    </div>
+    
+    <div id="profitBanner"></div>
+
+    <div class="section-title" style="color: #b06000;">2. 变动方案测算 (正向)</div>
+    <div class="radio-group">
+        <label class="radio-label">
+            <input type="radio" name="actionType" id="actBuy" value="buy" checked onchange="onActionTypeChange()"> 计划加仓 (买入)
+        </label>
+        <label class="radio-label">
+            <input type="radio" name="actionType" id="actSell" value="sell" onchange="onActionTypeChange()"> 计划减仓 (卖出)
+        </label>
+    </div>
+    <div class="grid-2">
+        <div class="input-group">
+            <label id="aPriceLabel">加仓价格 (元)</label>
+            <input type="number" id="aPrice" placeholder="0.00" step="0.001">
+        </div>
+        <div class="input-group">
+            <label id="aCountLabel">加仓股数 (股)</label>
+            <input type="number" id="aCount" placeholder="0" step="1">
+        </div>
+    </div>
+    
+    <div class="btn-container">
+        <button class="btn-primary" onclick="calcForward()">测算新成本</button>
+        <button class="btn-secondary" onclick="resetAll()">重置</button>
+    </div>
+    
+    <div class="result-box" id="resForwardCard">
+        <div class="result-row"><span>操作后总持仓</span><span class="val" id="rfCount">0 股</span></div>
+        <div class="result-row"><span>变动资金</span><span class="val" id="rfMoney">0.00 元</span></div>
+        <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+            <span>💡 调整后保本价</span>
+            <span class="val val-large text-up" id="rfPrice">0.000 元</span>
+        </div>
+    </div>
+
+    <div class="section-title" style="color: #a142f4;">3. 目标成本逆向反推</div>
+    <div class="grid-2">
+        <div class="input-group">
+            <label>期望理想成本 (元)</label>
+            <input type="number" id="targetCost" placeholder="0.00" step="0.001">
+        </div>
+        <div class="input-group">
+            <label>准备操作时的股价 (元)</label>
+            <input type="number" id="targetActionPrice" placeholder="0.00" step="0.001">
+        </div>
+    </div>
+    
+    <div class="btn-container">
+        <button class="btn-primary" style="background-color: #a142f4;" onclick="calcReverse()">智能反推仓位</button>
+        <button class="btn-secondary" onclick="resetAll()">重置</button>
+    </div>
+
+    <div class="result-box" id="resReverseCard">
+        <div id="reverseOutput"></div>
+    </div>
+</div>
+
+<script>
+    // 1. 实时持仓盈亏看板
+    function calcCurrentProfit() {
+        const cp = parseFloat(document.getElementById('cPrice').value);
+        const cc = parseFloat(document.getElementById('cCount').value);
+        const mp = parseFloat(document.getElementById('mPrice').value);
+        const banner = document.getElementById('profitBanner');
+
+        if(isNaN(cp) || isNaN(cc) || isNaN(mp) || cc <= 0) {
+            banner.style.display = 'none';
+            return;
+        }
+
+        const costTotal = cp * cc;
+        const marketTotal = mp * cc;
+        const profit = marketTotal - costTotal;
+        const profitRate = (profit / costTotal) * 100;
+
+        banner.style.display = 'block';
+        if(profit >= 0) {
+            banner.style.backgroundColor = '#fce8e6';
+            banner.style.color = 'var(--google-red)';
+            banner.innerText = `当前总市值: ${marketTotal.toFixed(2)} 元 | 累计盈利: +${profit.toFixed(2)} 元 (+${profitRate.toFixed(2)}%)`;
+        } else {
+            banner.style.backgroundColor = '#e6f4ea';
+            banner.style.color = 'var(--google-green)';
+            banner.innerText = `当前总市值: ${marketTotal.toFixed(2)} 元 | 累计亏损: ${profit.toFixed(2)} 元 (${profitRate.toFixed(2)}%)`;
+        }
+    }
+
+    // 2. 方案选项文案切换
+    function onActionTypeChange() {
+        const isBuy = document.getElementById('actBuy').checked;
+        document.getElementById('aPriceLabel').innerText = isBuy ? '加仓价格 (元)' : '减仓价格 (元)';
+        document.getElementById('aCountLabel').innerText = isBuy ? '加仓股数 (股)' : '减仓股数 (股)';
+    }
+
+    // 3. 正向方案计算逻辑
+    function calcForward() {
+        const cp = parseFloat(document.getElementById('cPrice').value);
+        const cc = parseFloat(document.getElementById('cCount').value);
+        const ap = parseFloat(document.getElementById('aPrice').value);
+        const ac = parseFloat(document.getElementById('aCount').value);
+        const isBuy = document.getElementById('actBuy').checked;
+
+        if (isNaN(cp) || isNaN(cc) || isNaN(ap) || isNaN(ac)) {
+            alert('请完整填写上方持仓和方案数据！');
+            return;
+        }
+
+        let finalCount = 0;
+        let finalPrice = 0;
+        let changeMoney = ap * ac;
+
+        if (isBuy) {
+            finalCount = cc + ac;
+            finalPrice = ((cp * cc) + (ap * ac)) / finalCount;
+        } else {
+            if (ac >= cc) { alert('减仓股数必须小于当前持仓股数！'); return; }
+            finalCount = cc - ac;
+            finalPrice = ((cp * cc) - (ap * ac)) / finalCount;
+        }
+
+        document.getElementById('rfCount').innerText = finalCount + ' 股';
+        document.getElementById('rfMoney').innerText = (isBuy ? '支出 ' : '收回 ') + changeMoney.toFixed(2) + ' 元';
+        document.getElementById('rfPrice').innerText = finalPrice.toFixed(3) + ' 元';
+        document.getElementById('resForwardCard').style.display = 'block';
+    }
+
+    // 4. 逆向方案反推逻辑
+    function calcReverse() {
+        const cp = parseFloat(document.getElementById('cPrice').value);
+        const cc = parseFloat(document.getElementById('cCount').value);
+        const tCost = parseFloat(document.getElementById('targetCost').value);
+        const tActionP = parseFloat(document.getElementById('targetActionPrice').value);
+        const out = document.getElementById('reverseOutput');
+        const box = document.getElementById('resReverseCard');
+
+        if (isNaN(cp) || isNaN(cc) || isNaN(tCost) || isNaN(tActionP)) {
+            alert('请完整填写反推所需的数据！');
+            return;
+        }
+
+        if (tCost === tActionP) {
+            alert('目标成本与操作股价相同在数学上无法计算，请调整目标！');
+            return;
+        }
+        
+        let requiredShares = (cc * (tCost - cp)) / (tActionP - tCost);
+        let htmlResult = "";
+
+        if (requiredShares > 0) {
+            let neededMoney = requiredShares * tActionP;
+            htmlResult = `
+                <div class="result-row"><span>建议路径</span><span class="val text-up">🟢 加仓买入</span></div>
+                <div class="result-row"><span>建议股数</span><span class="val val-large">${Math.ceil(requiredShares)} 股</span></div>
+                <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);"><span>预计所需资金</span><span class="val val-large text-up">${neededMoney.toFixed(2)} 元</span></div>
+            `;
+        } else if (requiredShares < 0) {
+            let sellShares = Math.abs(requiredShares);
+            let cashBack = sellShares * tActionP;
+
+            if (sellShares >= cc) {
+                htmlResult = `<div class="result-row"><span class="val" style="color:#d97706;">⚠️ 无法通过减仓达成该目标</span></div>`;
+            } else {
+                htmlResult = `
+                    <div class="result-row"><span>建议路径</span><span class="val text-down">🔴 减仓高抛</span></div>
+                    <div class="result-row"><span>建议股数</span><span class="val val-large">${Math.ceil(sellShares)} 股</span></div>
+                    <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);"><span>回笼资金</span><span class="val val-large text-down">${cashBack.toFixed(2)} 元</span></div>
+                `;
+            }
+        } else {
+            htmlResult = `<div class="result-row"><span class="val">持仓已符合目标</span></div>`;
+        }
+
+        out.innerHTML = htmlResult;
+        box.style.display = 'block';
+    }
+
+    // 5. 彻底重构、最稳妥的一键重置
+    function resetAll() {
+        // 清空输入框
+        document.getElementById('cPrice').value = '';
+        document.getElementById('cCount').value = '';
+        document.getElementById('mPrice').value = '';
+        document.getElementById('aPrice').value = '';
+        document.getElementById('aCount').value = '';
+        document.getElementById('targetCost').value = '';
+        document.getElementById('targetActionPrice').value = '';
+
+        // 隐藏展示块
+        document.getElementById('profitBanner').style.display = 'none';
+        document.getElementById('resForwardCard').style.display = 'none';
+        document.getElementById('resReverseCard').style.display = 'none';
+
+        // 恢复单选状态
+        document.getElementById('actBuy').checked = true;
+        onActionTypeChange();
+
+        // 聚焦
+        document.getElementById('cPrice').focus();
+    }
+</script>
+
+</body>
+</html>
